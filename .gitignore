@@ -1,0 +1,17 @@
+.DS_Store
+.merlin
+.bsb.lock
+npm-debug.log
+/lib/bs/
+/node_modules/
+
+.merlin
+.install
+/lib/bs/
+*.log
+_esy
+_build
+*.install
+
+# Editor
+*.swp
