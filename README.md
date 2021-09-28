@@ -1,24 +1,14 @@
-# Basic Reason Template
+# Bulleter
 
-Hello! This project allows you to quickly get started with ReScript using Reason syntax. If you wanted a more sophisticated version, try the `react` template (`bsb -theme react -init .`).
+Just a simple ReasonML program that allows me to format note dumps using an idea I started using based on general bullet jounaling principles, except not really.
 
-# Build
+## Why?
 
-```bash
-# for yarn
-yarn build
+I have been wanting to write something like this before, and it seemed simple enough for my first ReasonML project.
 
-# for npm
-npm run build
-```
+## How to run it
 
-# Build + Watch
-
-```bash
-# for yarn
-yarn start
-
-# for npm
-npm run start
+```shell
+$ node path/to/Bulleter.bs.js path/to/inNotes.md path/to/outNotes.md 
 ```
 
