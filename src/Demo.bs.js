@@ -3,64 +3,111 @@
 
 var Fs = require("fs");
 var Belt_Id = require("bs-platform/lib/js/belt_Id.js");
+var Process = require("process");
+var Belt_Map = require("bs-platform/lib/js/belt_Map.js");
 var Caml_obj = require("bs-platform/lib/js/caml_obj.js");
 var Belt_List = require("bs-platform/lib/js/belt_List.js");
-var ArrayLabels = require("bs-platform/lib/js/arrayLabels.js");
+var Belt_Array = require("bs-platform/lib/js/belt_Array.js");
 
-var Bullet = {};
+function stringOfBullteType(bt) {
+  switch (bt) {
+    case /* Question */0 :
+        return "Question";
+    case /* Todo */1 :
+        return "Todo";
+    case /* Item */2 :
+        return "Item";
+    
+  }
+}
+
+var Bullet = {
+  stringOfBullteType: stringOfBullteType
+};
 
 var cmp = Caml_obj.caml_compare;
 
-var BulletComparator = Belt_Id.MakeComparable({
+var BulletCompare = Belt_Id.MakeComparable({
       cmp: cmp
     });
 
 function bulletOfString(str) {
+  var value = str.substr(3);
   var indicator = str.substring(0, 2);
-  var bulletType;
   switch (indicator) {
     case ".-" :
-        bulletType = /* Todo */1;
-        break;
-    case ".." :
-        bulletType = /* Item */2;
-        break;
+        return {
+                bulletType: /* Item */2,
+                value: value
+              };
+    case ".>" :
+        return {
+                bulletType: /* Todo */1,
+                value: value
+              };
     case ".?" :
-        bulletType = /* Question */0;
-        break;
+        return {
+                bulletType: /* Question */0,
+                value: value
+              };
     default:
-      bulletType = /* Item */2;
+      return ;
   }
-  var value = str.substring(3, 6);
-  return {
-          bulletType: bulletType,
-          value: value
-        };
 }
 
-function processBullets(bullets) {
-  return Belt_List.map(bullets, bulletOfString);
+function bulletReducer(accumulatedMap, item) {
+  var n = Belt_Map.getWithDefault(accumulatedMap, item.bulletType, "");
+  return Belt_Map.set(accumulatedMap, item.bulletType, n + ("* " + (item.value + "\n")));
 }
 
-var filename = "test.md";
+function notesReducer(accumulatedString, cmp, item) {
+  return accumulatedString + ("## " + (stringOfBullteType(cmp) + ("\n\n" + (item + "\n"))));
+}
 
-var fileContents = Fs.readFileSync(filename, "utf8");
+function processNotes(inNotes, outNotes) {
+  var fileContents = Fs.readFileSync(inNotes, "utf8");
+  var lines = fileContents.split("\n");
+  var __x = Belt_Array.map(lines, bulletOfString);
+  var __x$1 = Belt_List.fromArray(Belt_Array.keepMap(__x, (function (bullet) {
+              return bullet;
+            })));
+  var notes = Belt_Map.reduce(Belt_List.reduce(__x$1, Belt_Map.make(BulletCompare), bulletReducer), "", notesReducer);
+  Fs.writeFileSync(outNotes, "# Notes\n\n" + notes, "utf8");
+  
+}
 
-var lines = fileContents.split("\n");
+var nodeArg = Belt_Array.get(Process.argv, 0);
 
-var bulletsList = Belt_List.map(ArrayLabels.to_list(lines), bulletOfString);
+var progArg = Belt_Array.get(Process.argv, 1);
 
-Belt_List.forEach(bulletsList, (function (a) {
-        console.log(a);
-        
-      }));
+var inFileArg = Belt_Array.get(Process.argv, 2);
+
+var outFileArg = Belt_Array.get(Process.argv, 3);
+
+var exit = 0;
+
+if (inFileArg !== undefined && outFileArg !== undefined) {
+  processNotes(inFileArg, outFileArg);
+} else {
+  exit = 1;
+}
+
+if (exit === 1) {
+  if (nodeArg !== undefined && progArg !== undefined) {
+    console.log("Usage: " + (nodeArg + (" " + (progArg + " inputNote.md outputNote.md"))));
+  } else {
+    console.log("Error");
+  }
+}
 
 exports.Bullet = Bullet;
-exports.BulletComparator = BulletComparator;
+exports.BulletCompare = BulletCompare;
 exports.bulletOfString = bulletOfString;
-exports.processBullets = processBullets;
-exports.filename = filename;
-exports.fileContents = fileContents;
-exports.lines = lines;
-exports.bulletsList = bulletsList;
-/* BulletComparator Not a pure module */
+exports.bulletReducer = bulletReducer;
+exports.notesReducer = notesReducer;
+exports.processNotes = processNotes;
+exports.nodeArg = nodeArg;
+exports.progArg = progArg;
+exports.inFileArg = inFileArg;
+exports.outFileArg = outFileArg;
+/* BulletCompare Not a pure module */
